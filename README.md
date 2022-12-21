@@ -1,4 +1,4 @@
-# PyExotel ()
+# PyExotel
 
 Welcome to PyExotel, an unofficial Python package for interacting with Exotel's API. With PyExotel, you can easily make phone calls, manage campaigns, and gather information about calls and phone numbers using your Exotel API credentials.
 
