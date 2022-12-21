@@ -7,13 +7,13 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = '1.1.0'
+VERSION = '1.0.0'
 DESCRIPTION = 'Unofficial Exotel SDK For Python'
-LONG_DESCRIPTION = 'A package that allows you to make call using exotel API'
+LONG_DESCRIPTION = 'A package that allows you to make call, send sms and manage campaigns using exotel API'
 
 # Setting up
 setup(
-    name="exotelsdk",
+    name="pyexotel",
     version=VERSION,
     author="Bijay Nayak",
     author_email="<bijay6779@gmail.com>",
@@ -22,7 +22,7 @@ setup(
     long_description=long_description,
     packages=find_packages(),
     install_requires=['requests'],
-    keywords=['exotel', 'exotel api', 'exotel sdk'],
+    keywords=['exotel', 'exotel api', 'exotel sdk', 'pyexotel'],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
