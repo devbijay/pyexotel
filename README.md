@@ -41,7 +41,7 @@ exotel.get_call_info(call_sid="call_sid")
 To get information about a phone number, such as its operator name and DND status, use the `get_phone_info` method:
 
 ```python
-response = dialer.get_call_info(call_sid)
+response = dialer.get_phone_info(phone_number)
 ```
 
 Each of these methods returns a JSON object containing the response from the Exotel server.
