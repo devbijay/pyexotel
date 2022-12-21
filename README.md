@@ -4,7 +4,7 @@ Welcome to PyExotel, an unofficial Python package for interacting with Exotel's 
 
 ## Installation
 To install pyexotel, use `pip`:
-``` terminal
+```shell
 pip install pyexotel
 ```
 ## Usage
