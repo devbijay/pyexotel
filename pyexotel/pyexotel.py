@@ -37,6 +37,7 @@ class Exotel:
         self.domain = domain
         self.call_ep = f"https://{self.api_key}:{self.api_secret}@{self.domain}/v1/Accounts/{self.sid}/Calls"
         self.campaign_ep = f"https://{self.api_key}:{self.api_secret}@{self.domain}/v2/accounts/{self.sid}/campaigns"
+        self.users_ep = f"https://{self.api_key}:{self.api_secret}@{self.domain}/v2/accounts/{self.sid}/users"
         self.auth_token = base64.b64encode(f"{api_key}:{api_secret}".encode('ascii'))
 
     def call(self, agent_number: str, customer_number: str, caller_id: str, record: bool = True,
@@ -147,6 +148,109 @@ class Exotel:
                 f"https://{self.api_key}:{self.api_secret}@{self.domain}/v1/Accounts/{self.sid}/Numbers/{phone_number}.json")
             response.raise_for_status()
             return response.json()
+        except Exception as e:
+            # handle the exception here
+            print(f"An error occurred: {e}")
+
+    # Exotel User Functionality
+    def create_user(self, first_name: str, last_name: str, user_email: str, user_phone: str, role: str = "user"):
+
+        """
+        Role of the user on Exotel's dashboard. Possible values
+        #The first name of the user on Exotel
+        #The last name of the user on Exotel
+        #Unique and valid email ID of the user. If not set, the user will not be able to access Exotel's dashboard but calls can be made via CCM APIs
+        #The phone number of the user. It should be in E.164 format. For VOIP users, this is optional (SIP device will be auto created).
+
+        admin
+        supervisor
+        user
+        Default: user (which is an agent with lowest level of access permissions)
+
+        """
+        try:
+            data = {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": user_email,
+                "device_contact_uri": str(user_phone),
+                "role": role
+            }
+            response = requests.get(f"{self.users_ep}", data=data, headers={'Content-Type': 'application/json'})
+            response.raise_for_status()
+            return response.json()
+
+        except Exception as e:
+            # handle the exception here
+            print(f"An error occurred: {e}")
+
+    def update_user(self, user_id: str, data: dict):
+        """
+        This API allows you to update an existing user.
+
+        Args:
+            user_id: User ID Of The User
+            data: {
+                "first_name": First Name Of The User,
+                "last_name": Last Name Of The User,
+                "email": This is allowed only if email wasn't configured during Create User API.,
+
+            }
+
+        """
+        try:
+            response = requests.put(f"{self.users_ep}/{user_id}", data=data,
+                                    headers={'Content-Type': 'application/json'})
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            # handle the exception here
+            print(f"An error occurred: {e}")
+
+    def get_user_details(self, user_id: str):
+        """
+        This API allows you to get a single user details along with their associated devices.
+
+        Args:
+            user_id:
+
+        Returns: JSON
+
+        """
+
+        try:
+            response = requests.get(f"{self.users_ep}/{user_id}")
+            response.raise_for_status()
+            return response.json()
+
+        except Exception as e:
+            # handle the exception here
+            print(f"An error occurred: {e}")
+
+    def delete_user(self, user_id: str):
+        try:
+            response = requests.delete(f"{self.users_ep}/{user_id}")
+            response.raise_for_status()
+            return response.json()
+
+        except Exception as e:
+            # handle the exception here
+            print(f"An error occurred: {e}")
+
+    def set_user_status(self, user_id: str, device_id: str, status: bool, user_phone: str = ""):
+        data = {
+            "available": "true" if status else "false"
+        }
+        if user_phone:
+            data["contact_uri"] = user_phone
+
+        try:
+            response = requests.put(f"{self.users_ep}/{user_id}/devices/{device_id}",
+                                    data=data,
+                                    headers={'Content-Type': 'application/json'})
+            response.raise_for_status()
+            return response.json()
+
         except Exception as e:
             # handle the exception here
             print(f"An error occurred: {e}")
