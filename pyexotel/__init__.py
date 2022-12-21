@@ -1,1 +1,1 @@
-from .exotel import Exotel
+from .pyexotel import Exotel
