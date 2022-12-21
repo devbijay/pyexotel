@@ -13,27 +13,35 @@ To use PyExotel, you will first need to create an instance of the Exotel class w
 ```python
 from pyexotel import Exotel
 
-exotel = Exotel(api_key="your_api_key", api_secret="your_api_secret", sid="your_sid", domain="your_domain")
+dialer = Exotel(api_key="exotel_api_key", api_secret="exotel_api_secret", sid='exotel_sid', domain="exotel_domain")
 ```
 With the `Exotel` instance, you can now use the various methods available to interact with the Exotel API. Some of the things you can do include:
 
-* Place a phone call from one number to another:
-```python
-exotel.call(agent_number="agent_number", customer_number="customer_number", caller_id="caller_id")
-```
-
-* Connect a customer's call to a specific flow (or applet):
+### Place a Call
+To place a call from one phone number (agent_number) to another (customer_number), use the call method:
 
 ```python
-exotel.connect_flow(customer_number="customer_number", caller_id="caller_id", flow_id="flow_id")
+response = dialer.call(agent_number="NumberA", customer_number="numberB", called_id="exotel_callerID")
 ```
-* Get information about a specific call, such as its timing and recording URL:
+
+### Connect a Call to a Flow
+To connect a call from a customer (`customer_number`) to a specific flow (or applet) using Exotel's API, use the `connect_flow` method:
+
+```python
+response = dialer.connect_flow(customer_number, called_id, flow_id)
+```
+### Get Call Information
+To get information about a call, such as its timing and recording URL, use the `get_call_info` method:
+
+
 ```python
 exotel.get_call_info(call_sid="call_sid")
 ```
-*Get information about a phone number, such as its operator name and DND status:
+### Get Phone Information
+To get information about a phone number, such as its operator name and DND status, use the `get_phone_info` method:
+
 ```python
-exotel.get_phone_info(phone_number="phone_number")
+response = dialer.get_call_info(call_sid)
 ```
 
 Each of these methods returns a JSON object containing the response from the Exotel server.
