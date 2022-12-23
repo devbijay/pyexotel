@@ -42,16 +42,18 @@ class Exotel:
         self.campaign_ep = f"{self.base_url}/v2/accounts/{self.sid}/campaigns"
         self.users_ep = f"{self.base_url}/v2/accounts/{self.sid}/users"
 
-        self.auth_token = base64.b64encode(f"{api_key}:{api_secret}".encode("ascii"))
+        self.auth_token = base64.b64encode(
+            f"{api_key}:{api_secret}".encode("ascii")
+        ).decode()
 
     def call(
-            self,
-            agent_number: str,
-            customer_number: str,
-            caller_id: str,
-            record: bool = True,
-            time_limit: int = 14400,
-            stream_url="",
+        self,
+        agent_number: str,
+        customer_number: str,
+        caller_id: str,
+        record: bool = True,
+        time_limit: int = 14400,
+        stream_url="",
     ):
         """
         Makes a phone call from the given agent number to the given customer number.
@@ -88,11 +90,11 @@ class Exotel:
             print(f"An error occurred: {e}")
 
     def connect_flow(
-            self,
-            customer_number: str,
-            caller_id: str,
-            flow_id: str,
-            time_limit: int = 14400,
+        self,
+        customer_number: str,
+        caller_id: str,
+        flow_id: str,
+        time_limit: int = 14400,
     ):
         """
         Connects a customer's call to a specific flow (or applet) using Exotel API.
@@ -174,12 +176,12 @@ class Exotel:
 
     # Exotel User Functionality
     def create_user(
-            self,
-            first_name: str,
-            last_name: str,
-            user_email: str,
-            user_phone: str,
-            role: str = "user",
+        self,
+        first_name: str,
+        last_name: str,
+        user_email: str,
+        user_phone: str,
+        role: str = "user",
     ):
 
         """
@@ -297,7 +299,7 @@ class Exotel:
             print(f"An error occurred: {e}")
 
     def set_user_status(
-            self, user_id: str, device_id: str, status: bool, user_phone: str = ""
+        self, user_id: str, device_id: str, status: bool, user_phone: str = ""
     ):
         """
         Sets the availability status of a user on Exotel dashboard.
@@ -337,12 +339,12 @@ class Exotel:
     # Campaign Management
     def create_campaign(self, body: dict):
         """
-            Creates a new campaign.
-            Parameters:
-            body (json): A dictionary containing the details of the campaign to be created.
-            Returns:
-            dict: A dictionary containing the details of the newly created campaign.
-            """
+        Creates a new campaign.
+        Parameters:
+        body (json): A dictionary containing the details of the campaign to be created.
+        Returns:
+        dict: A dictionary containing the details of the newly created campaign.
+        """
         try:
             url = f"{self.campaign_ep}"
             response = requests.post(url, json=body).json()
@@ -354,12 +356,12 @@ class Exotel:
 
     def get_campaign_details(self, campaign_id):
         """
-            Retrieves the details of a specific campaign.
-            Parameters:
-            campaign_id (str): The ID of the campaign to retrieve.
-            Returns:
-            dict: A dictionary containing the details of the specified campaign.
-            """
+        Retrieves the details of a specific campaign.
+        Parameters:
+        campaign_id (str): The ID of the campaign to retrieve.
+        Returns:
+        dict: A dictionary containing the details of the specified campaign.
+        """
         try:
             response = requests.get(f"{self.campaign_ep}/{campaign_id}")
             response.raise_for_status()
@@ -370,13 +372,13 @@ class Exotel:
 
     def update_campaign(self, campaign_id, body):
         """
-            Updates a specific campaign.
-            Parameters:
-            campaign_id (str): The ID of the campaign to update.
-            body (dict): A dictionary containing the updated details of the campaign.
-            Returns:
-            requests.Response: A Response object containing the server's response to the update request.
-            """
+        Updates a specific campaign.
+        Parameters:
+        campaign_id (str): The ID of the campaign to update.
+        body (dict): A dictionary containing the updated details of the campaign.
+        Returns:
+        requests.Response: A Response object containing the server's response to the update request.
+        """
         try:
             response = requests.post(f"{self.campaign_ep}/{campaign_id}", json=body)
             response.raise_for_status()
@@ -387,12 +389,12 @@ class Exotel:
 
     def delete_campaign(self, campaign_id):
         """
-            Deletes a specific campaign.
-            Parameters:
-            campaign_id (str): The ID of the campaign to delete.
-            Returns:
-            dict: A dictionary containing the details of the deleted campaign.
-            """
+        Deletes a specific campaign.
+        Parameters:
+        campaign_id (str): The ID of the campaign to delete.
+        Returns:
+        dict: A dictionary containing the details of the deleted campaign.
+        """
         try:
             response = requests.delete(f"{self.campaign_ep}/{campaign_id}")
             response.raise_for_status()
@@ -401,4 +403,34 @@ class Exotel:
             # handle the exception here
             print(f"An error occurred: {e}")
 
+    def get_campaign_call_info(
+        self,
+        campaign_id: str,
+        limit: int = "20",
+        status: str = "completed,no-answer,failed, busy",
+        sort_by: str = "date_created:asc",
+    ):
+        """
+        Retrieves the call details for a specific campaign.
 
+        Parameters:
+            campaign_id (str): The ID of the campaign for which to retrieve the call details.
+            limit (int, optional): The number of records on a single page. Default is 20.
+            status (str, optional): The status of the call.
+                                    Possible values are "completed", "failed", "busy", and "no-answer".
+            sort_by (str, optional): The field by which to sort the records. Possible values are "date_created:asc"
+                                     and "date_created:desc".
+
+        Returns:
+            dict: A dictionary containing the JSON response from the server. If an error occurs, returns None.
+        """
+        data = {"limit": limit, "status": status, "sort_by": sort_by}
+        try:
+            response = requests.get(
+                f"{self.campaign_ep}/{campaign_id}/call-details", data=data
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            # handle the exception here
+            print(f"An error occurred: {e}")
