@@ -19,6 +19,14 @@ from pyexotel import Exotel
 
 dialer = Exotel(api_key="exotel_api_key", api_secret="exotel_api_secret", sid='exotel_sid', domain="exotel_domain")
 ```
+**Parameters**
+* api_key (str): Your Exotel `API key`.
+* api_secret (str): Your Exotel `API secret`.
+* sid (str): Your Exotel `SID`.
+* domain (str): Your Exotel domain, without the "`@`" part. If you want to use the user functionality
+* For Singapore cluster, domain is : `ccm-api.exotel.com`
+* For Mumbai cluster, domain is: `ccm-api.in.exotel.com`
+* Default domain is: `ccm-api.exotel.com`
 
 For `Exotel` instance, you can now use the various methods available to interact with the Exotel API. Some of the things you can do include:
 
