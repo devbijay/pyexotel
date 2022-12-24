@@ -21,7 +21,13 @@ class Exotel:
 
     """
 
-    def __init__(self, api_key: str, api_secret: str, sid: str, domain: str):
+    def __init__(
+        self,
+        api_key: str,
+        api_secret: str,
+        sid: str,
+        domain: str = "ccm-api.exotel.com",
+    ):
         """
         Initializes an Exotel instance with the given API key, API secret, SID, and domain.
 
@@ -29,7 +35,10 @@ class Exotel:
         - api_key (str): Your Exotel API key.
         - api_secret (str): Your Exotel API secret.
         - sid (str): Your Exotel SID.
-        - domain (str): Your Exotel domain, without the "@" part.
+        - domain (str): Your Exotel domain, without the "@" part. If you want to use the user functionality
+            -- For Singapore cluster, domain is : ccm-api.exotel.com
+            -- For Mumbai cluster, domain is: ccm-api.in.exotel.com
+            -- Default domain is: ccm-api.exotel.com
         """
 
         self.sid = sid

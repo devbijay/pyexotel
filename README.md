@@ -27,7 +27,7 @@ For `Exotel` instance, you can now use the various methods available to interact
 To place a call from one phone number (agent\_number) to another (customer\_number), use the call method:
 
 ```python
-response = dialer.call(agent_number="NumberA", customer_number="numberB", called_id="exotel_callerID")
+response = dialer.call(agent_number="NumberA", customer_number="numberB", caller_id="exotel_callerID")
 ```
 
 ### Connect a Call to a Flow
@@ -158,6 +158,26 @@ Deletes a user from Exotel's dashboard.
 > *   (Exception): If an error occurs while making the API request.
 
 ---
+
+### _**get_all_users**_
+
+Get All Users from Exotel's dashboard'
+
+**Parameters**
+
+>*   **fields (str, optional)**: A comma-separated list of fields to include in the response.
+           Valid values are: "devices", "active_call", and "last_login".
+           Default value is "devices,active_call,last_login"
+**Returns**
+
+> *   (JSON): A list of dictionaries containing information about the users.
+
+**Raises**
+
+> *   (Exception): If an error occurs while making the API request.
+
+---
+
 
 ## Note
 
