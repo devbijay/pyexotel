@@ -32,19 +32,18 @@ class Exotel:
         - domain (str): Your Exotel domain, without the "@" part.
         """
 
-        self.api_key = api_key
-        self.api_secret = api_secret
         self.sid = sid
-        self.base_url = f"https://{api_key}:{api_secret}@{domain}"
-        self.base_header = {"Content-Type": "application/json"}
-
-        self.call_ep = f"{self.base_url}/v1/Accounts/{self.sid}/Calls"
-        self.campaign_ep = f"{self.base_url}/v2/accounts/{self.sid}/campaigns"
-        self.users_ep = f"{self.base_url}/v2/accounts/{self.sid}/users"
+        self.call_ep = f"https://api.exotel.com/v1/Accounts/{sid}/Calls"
+        self.users_ep = f"https://{domain}/v2/accounts/{self.sid}/users"
 
         self.auth_token = base64.b64encode(
             f"{api_key}:{api_secret}".encode("ascii")
         ).decode()
+        self.get_header = {"Authorization": f"Basic {self.auth_token}"}
+        self.post_header = {
+            "Content-Type": "application/json",
+            "Authorization": f"Basic {self.auth_token}",
+        }
 
     def call(
         self,
@@ -82,7 +81,9 @@ class Exotel:
             if stream_url:
                 data["StreamUrl"] = stream_url
 
-            response = requests.post(f"{self.call_ep}/connect.json", data=data)
+            response = requests.post(
+                f"{self.call_ep}/connect.json", data=data, headers=self.get_header
+            )
             response.raise_for_status()
             return response.json()
         except Exception as e:
@@ -109,17 +110,19 @@ class Exotel:
         Returns:
         - A JSON object with the response from Exotel API.
         """
+        params = {
+            "From": str(customer_number),
+            "Url": f"http://my.exotel.com/{self.sid}/exoml/start_voice/{flow_id}",
+            "CallerId": str(caller_id),
+            "TimeLimit": int(time_limit),
+        }
         try:
-            params = {
-                "From": str(customer_number),
-                "Url": f"http://my.exotel.com/{self.sid}/exoml/start_voice/{flow_id}",
-                "CallerId": str(caller_id),
-                "TimeLimit": int(time_limit),
-            }
-            response = requests.post(f"{self.call_ep}/connect.json", params)
+
+            response = requests.post(
+                f"{self.call_ep}/connect.json", data=params, headers=self.get_header
+            )
             response.raise_for_status()
             return response.json()
-
         except Exception as e:
             # handle the exception here
             print(f"An error occurred: {e}")
@@ -135,7 +138,9 @@ class Exotel:
         - A JSON object with the information about the call from Exotel API.
         """
         try:
-            response = requests.get(f"{self.call_ep}/{call_sid}.json")
+            response = requests.get(
+                f"{self.call_ep}/{call_sid}.json", headers=self.get_header
+            )
             response.raise_for_status()
             return response.json()
 
@@ -166,7 +171,8 @@ class Exotel:
         """
         try:
             response = requests.get(
-                f"{self.base_url}/v1/Accounts/{self.sid}/Numbers/{phone_number}.json"
+                f"https://api.exotel.com/v1/Accounts/{self.sid}/Numbers/{phone_number}.json",
+                headers=self.get_header,
             )
             response.raise_for_status()
             return response.json()
@@ -211,10 +217,10 @@ class Exotel:
                 "device_contact_uri": str(user_phone),
                 "role": role,
             }
-            response = requests.get(
-                f"{self.users_ep}",
+            response = requests.post(
+                self.users_ep,
                 data=data,
-                headers=self.base_header,
+                headers=self.post_header,
             )
             response.raise_for_status()
             return response.json()
@@ -236,9 +242,9 @@ class Exotel:
         Raises:
             Exception: If an error occurs while making the API request.
         """
-
+        url = f"{self.users_ep}/{user_id}"
         try:
-            response = requests.get(f"{self.users_ep}/{user_id}")
+            response = requests.get(url, headers=self.get_header)
             response.raise_for_status()
             return response.json()
 
@@ -267,8 +273,8 @@ class Exotel:
         try:
             response = requests.put(
                 f"{self.users_ep}/{user_id}",
-                data=data,
-                headers=self.base_header,
+                params=data,
+                headers=self.post_header,
             )
             response.raise_for_status()
             return response.json()
@@ -290,10 +296,11 @@ class Exotel:
             Exception: If an error occurs while making the API request.
         """
         try:
-            response = requests.delete(f"{self.users_ep}/{user_id}")
+            response = requests.delete(
+                f"{self.users_ep}/{user_id}", headers=self.get_header
+            )
             response.raise_for_status()
             return response.json()
-
         except Exception as e:
             # handle the exception here
             print(f"An error occurred: {e}")
@@ -317,15 +324,16 @@ class Exotel:
         Raises:
             Exception: If an error occurs while making the API request.
         """
-        data = {"available": "true" if status else "false"}
+        data = {"available": status}
+
         if user_phone:
             data["contact_uri"] = user_phone
-
+        print(data)
         try:
             response = requests.put(
                 f"{self.users_ep}/{user_id}/devices/{device_id}",
-                data=data,
-                headers=self.base_header,
+                params=data,
+                headers=self.get_header,
             )
             response.raise_for_status()
             return response.json()
@@ -334,103 +342,29 @@ class Exotel:
             # handle the exception here
             print(f"An error occurred: {e}")
 
-        # END Of Exotel User Functionality
-
-    # Campaign Management
-    def create_campaign(self, body: dict):
+    def get_all_users(self, fields="devices,active_call,last_login"):
         """
-        Creates a new campaign.
-        Parameters:
-        body (json): A dictionary containing the details of the campaign to be created.
-        Returns:
-        dict: A dictionary containing the details of the newly created campaign.
-        """
-        try:
-            url = f"{self.campaign_ep}"
-            response = requests.post(url, json=body).json()
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            # handle the exception here
-            print(f"An error occurred: {e}")
-
-    def get_campaign_details(self, campaign_id):
-        """
-        Retrieves the details of a specific campaign.
-        Parameters:
-        campaign_id (str): The ID of the campaign to retrieve.
-        Returns:
-        dict: A dictionary containing the details of the specified campaign.
-        """
-        try:
-            response = requests.get(f"{self.campaign_ep}/{campaign_id}")
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            # handle the exception here
-            print(f"An error occurred: {e}")
-
-    def update_campaign(self, campaign_id, body):
-        """
-        Updates a specific campaign.
-        Parameters:
-        campaign_id (str): The ID of the campaign to update.
-        body (dict): A dictionary containing the updated details of the campaign.
-        Returns:
-        requests.Response: A Response object containing the server's response to the update request.
-        """
-        try:
-            response = requests.post(f"{self.campaign_ep}/{campaign_id}", json=body)
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            # handle the exception here
-            print(f"An error occurred: {e}")
-
-    def delete_campaign(self, campaign_id):
-        """
-        Deletes a specific campaign.
-        Parameters:
-        campaign_id (str): The ID of the campaign to delete.
-        Returns:
-        dict: A dictionary containing the details of the deleted campaign.
-        """
-        try:
-            response = requests.delete(f"{self.campaign_ep}/{campaign_id}")
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            # handle the exception here
-            print(f"An error occurred: {e}")
-
-    def get_campaign_call_info(
-        self,
-        campaign_id: str,
-        limit: int = "20",
-        status: str = "completed,no-answer,failed, busy",
-        sort_by: str = "date_created:asc",
-    ):
-        """
-        Retrieves the call details for a specific campaign.
+        Retrieves a list of all users from the Exotel API.
 
         Parameters:
-            campaign_id (str): The ID of the campaign for which to retrieve the call details.
-            limit (int, optional): The number of records on a single page. Default is 20.
-            status (str, optional): The status of the call.
-                                    Possible values are "completed", "failed", "busy", and "no-answer".
-            sort_by (str, optional): The field by which to sort the records. Possible values are "date_created:asc"
-                                     and "date_created:desc".
+        - fields (str, optional): A comma-separated list of fields to include in the response.
+            Valid values are: "devices", "active_call", and "last_login".
+            Default value is "devices,active_call,last_login".
 
         Returns:
-            dict: A dictionary containing the JSON response from the server. If an error occurs, returns None.
+        - List[Dict[str, Any]]: A list of dictionaries containing information about the users.
         """
-        data = {"limit": limit, "status": status, "sort_by": sort_by}
+
         try:
             response = requests.get(
-                f"{self.campaign_ep}/{campaign_id}/call-details", data=data
+                f"{self.users_ep}?fields={fields}",
+                headers=self.get_header,
             )
             response.raise_for_status()
             return response.json()
+
         except Exception as e:
             # handle the exception here
             print(f"An error occurred: {e}")
+
+    # END Of Exotel User Functionality
