@@ -1,6 +1,7 @@
 import requests
 import base64
 
+
 AUTHORIZATION_HEADER = "Authorization"
 BASIC_AUTH_PREFIX = "Basic"
 
@@ -29,7 +30,8 @@ class Exotel:
         api_key: str,
         api_secret: str,
         sid: str,
-        domain: str = "ccm-api.exotel.com",
+        domain: str = "api.exotel.com",
+        ccm_domain="ccm-api.exotel.com",
     ):
         """
         Initializes an Exotel instance with the given API key, API secret, SID, and domain.
@@ -38,16 +40,16 @@ class Exotel:
         - api_key (str): Your Exotel API key.
         - api_secret (str): Your Exotel API secret.
         - sid (str): Your Exotel SID (Used to identify the Exotel account to use)
-        - domain (str): Your Exotel domain, without the "@" part. If you want to use the user functionality
+        - domain(str): Exotel APi Domain ( Singapore cluster is @api.exotel.com & Mumbai cluster is @api.in.exotel.com)
+        - ccm_domain (str): Your CCM API Exotel domain, without the "@" part. If you want to use the user functionality
             -- For Singapore cluster, domain is : ccm-api.exotel.com
-            -- For Mumbai cluster, domain is: ccm-api.in.exotel.com
-            -- Default domain is: ccm-api.exotel.com
+            -- For Mumbai cluster, domain is: ccm-api.in.exotel.com (Default)
         """
 
         self.sid = sid
-        self.call_ep = f"https://api.exotel.com/v1/Accounts/{sid}/Calls"
-        self.users_ep = f"https://{domain}/v2/accounts/{self.sid}/users"
-        self.campaign_ep = f"https://api.exotel.com/v2/accounts/{sid}/campaigns"
+        self.call_ep = f"https://{domain}/v1/Accounts/{sid}/Calls"
+        self.users_ep = f"https://{ccm_domain}/v2/accounts/{self.sid}/users"
+        self.campaign_ep = f"https://{domain}/v2/accounts/{sid}/campaigns"
 
         self.auth_token = base64.b64encode(
             f"{api_key}:{api_secret}".encode("ascii")
@@ -399,17 +401,74 @@ class Exotel:
             # handle the exception here
             print(f"An error occurred: {e}")
 
-    def create_campaign(self, body: dict):
+    def get_campaign_call_info(
+        self,
+        campaign_id: str,
+        limit: int = "20",
+        status: str = "completed,no-answer,failed, busy",
+        sort_by: str = "date_created:asc",
+    ):
         """
-        Creates a new campaign.
+        Retrieves the call details for a specific campaign.
+
         Parameters:
-        body (json): A dictionary containing the details of the campaign to be created.
+            campaign_id (str): The ID of the campaign for which to retrieve the call details.
+            limit (int, optional): The number of records on a single page. Default is 20.
+            status (str, optional): The status of the call.
+                                    Possible values are "completed", "failed", "busy", and "no-answer".
+            sort_by (str, optional): The field by which to sort the records. Possible values are "date_created:asc"
+                                     and "date_created:desc".
+
         Returns:
-        dict: A dictionary containing the details of the newly created campaign.
+            dict: A dictionary containing the JSON response from the server. If an error occurs, returns None.
         """
+
+        params = {"status": status, "sort_by": sort_by, "limit": limit}
+        params = "&".join(f"{key}={value}" for key, value in params.items())
         try:
-            url = f"{self.campaign_ep}"
-            response = requests.post(url, json=body).json()
+            response = requests.get(
+                f"{self.campaign_ep}/{campaign_id}/call-details",
+                params=params,
+                headers=self.req_header,
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            # handle the exception here
+            print(f"An error occurred: {e}")
+
+    def get_all_campaigns(
+        self,
+        name: str = "",
+        limit: int = 20,
+        status: str = "Created,Completed",
+    ):
+        """
+        Get a list of all campaigns.
+
+        Parameters:
+            name (Optional[str]): The name of the campaigns to filter by.
+            limit (Optional[int]): The maximum number of campaigns to return.
+            status (Optional[str]): The status of the campaigns to filter by.
+
+        Returns:
+            dict: A dictionary containing the campaign data in JSON format.
+        """
+
+        params = {
+            "status": status,
+            "limit": limit,
+        }
+        if name:
+            params["name"] = name
+        params = "&".join(f"{key}={value}" for key, value in params.items())
+
+        try:
+            response = requests.get(
+                self.campaign_ep,
+                params=params,
+                headers=self.req_header,
+            )
             response.raise_for_status()
             return response.json()
         except Exception as e:
