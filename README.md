@@ -17,7 +17,7 @@ To use PyExotel, you will first need to create an instance of the Exotel class w
 ```python
 from pyexotel import Exotel
 
-dialer = Exotel(api_key="exotel_api_key", api_secret="exotel_api_secret", sid='exotel_sid', domain="exotel_domain")
+dialer = Exotel(api_key="exotel_api_key", api_secret="exotel_api_secret", sid='exotel_sid', domain="exotel_domain", ccm_domain="exotel_ccm_domain")
 ```
 **Parameters**
 * api_key (str): Your Exotel `API key`.
