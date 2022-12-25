@@ -1,6 +1,9 @@
 import requests
 import base64
 
+AUTHORIZATION_HEADER = "Authorization"
+BASIC_AUTH_PREFIX = "Basic"
+
 
 class Exotel:
     """
@@ -34,7 +37,7 @@ class Exotel:
         Parameters:
         - api_key (str): Your Exotel API key.
         - api_secret (str): Your Exotel API secret.
-        - sid (str): Your Exotel SID.
+        - sid (str): Your Exotel SID (Used to identify the Exotel account to use)
         - domain (str): Your Exotel domain, without the "@" part. If you want to use the user functionality
             -- For Singapore cluster, domain is : ccm-api.exotel.com
             -- For Mumbai cluster, domain is: ccm-api.in.exotel.com
@@ -44,14 +47,13 @@ class Exotel:
         self.sid = sid
         self.call_ep = f"https://api.exotel.com/v1/Accounts/{sid}/Calls"
         self.users_ep = f"https://{domain}/v2/accounts/{self.sid}/users"
+        self.campaign_ep = f"https://api.exotel.com/v2/accounts/{sid}/campaigns"
 
         self.auth_token = base64.b64encode(
             f"{api_key}:{api_secret}".encode("ascii")
         ).decode()
-        self.get_header = {"Authorization": f"Basic {self.auth_token}"}
-        self.post_header = {
-            "Content-Type": "application/json",
-            "Authorization": f"Basic {self.auth_token}",
+        self.req_header = {
+            f"{AUTHORIZATION_HEADER}": f"{BASIC_AUTH_PREFIX} {self.auth_token}"
         }
 
     def call(
@@ -80,7 +82,7 @@ class Exotel:
         """
 
         try:
-            data = {
+            call_data = {
                 "From": str(agent_number),
                 "To": str(customer_number),
                 "CallerId": str(caller_id),
@@ -88,10 +90,10 @@ class Exotel:
                 "Record": "true" if record else "false",
             }
             if stream_url:
-                data["StreamUrl"] = stream_url
+                call_data["StreamUrl"] = stream_url
 
             response = requests.post(
-                f"{self.call_ep}/connect.json", data=data, headers=self.get_header
+                f"{self.call_ep}/connect.json", data=call_data, headers=self.req_header
             )
             response.raise_for_status()
             return response.json()
@@ -128,7 +130,7 @@ class Exotel:
         try:
 
             response = requests.post(
-                f"{self.call_ep}/connect.json", data=params, headers=self.get_header
+                f"{self.call_ep}/connect.json", data=params, headers=self.req_header
             )
             response.raise_for_status()
             return response.json()
@@ -148,7 +150,7 @@ class Exotel:
         """
         try:
             response = requests.get(
-                f"{self.call_ep}/{call_sid}.json", headers=self.get_header
+                f"{self.call_ep}/{call_sid}.json", headers=self.req_header
             )
             response.raise_for_status()
             return response.json()
@@ -181,7 +183,7 @@ class Exotel:
         try:
             response = requests.get(
                 f"https://api.exotel.com/v1/Accounts/{self.sid}/Numbers/{phone_number}.json",
-                headers=self.get_header,
+                headers=self.req_header,
             )
             response.raise_for_status()
             return response.json()
@@ -228,8 +230,8 @@ class Exotel:
             }
             response = requests.post(
                 self.users_ep,
-                data=data,
-                headers=self.post_header,
+                json=data,
+                headers=self.req_header,
             )
             response.raise_for_status()
             return response.json()
@@ -253,7 +255,7 @@ class Exotel:
         """
         url = f"{self.users_ep}/{user_id}"
         try:
-            response = requests.get(url, headers=self.get_header)
+            response = requests.get(url, headers=self.req_header)
             response.raise_for_status()
             return response.json()
 
@@ -282,8 +284,8 @@ class Exotel:
         try:
             response = requests.put(
                 f"{self.users_ep}/{user_id}",
-                params=data,
-                headers=self.post_header,
+                json=data,
+                headers=self.req_header,
             )
             response.raise_for_status()
             return response.json()
@@ -306,7 +308,7 @@ class Exotel:
         """
         try:
             response = requests.delete(
-                f"{self.users_ep}/{user_id}", headers=self.get_header
+                f"{self.users_ep}/{user_id}", headers=self.req_header
             )
             response.raise_for_status()
             return response.json()
@@ -342,7 +344,7 @@ class Exotel:
             response = requests.put(
                 f"{self.users_ep}/{user_id}/devices/{device_id}",
                 params=data,
-                headers=self.get_header,
+                headers=self.req_header,
             )
             response.raise_for_status()
             return response.json()
@@ -367,7 +369,7 @@ class Exotel:
         try:
             response = requests.get(
                 f"{self.users_ep}?fields={fields}",
-                headers=self.get_header,
+                headers=self.req_header,
             )
             response.raise_for_status()
             return response.json()
@@ -377,3 +379,39 @@ class Exotel:
             print(f"An error occurred: {e}")
 
     # END Of Exotel User Functionality
+
+    # Exotel Campaign Feature
+    def get_campaign_info(self, campaign_id):
+        """
+        Retrieves the details of a specific campaign.
+        Parameters:
+        campaign_id (str): The ID of the campaign to retrieve.
+        Returns:
+        dict: A dictionary containing the details of the specified campaign.
+        """
+        try:
+            response = requests.get(
+                f"{self.campaign_ep}/{campaign_id}", headers=self.req_header
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            # handle the exception here
+            print(f"An error occurred: {e}")
+
+    def create_campaign(self, body: dict):
+        """
+        Creates a new campaign.
+        Parameters:
+        body (json): A dictionary containing the details of the campaign to be created.
+        Returns:
+        dict: A dictionary containing the details of the newly created campaign.
+        """
+        try:
+            url = f"{self.campaign_ep}"
+            response = requests.post(url, json=body).json()
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            # handle the exception here
+            print(f"An error occurred: {e}")
